@@ -1,23 +1,23 @@
 
 /* ****************************************************************
  * Copyright Stanford University 1998,99 - All Rights Reserved
- ******************************************************************
+ ****************************************************************** 
 
- * Permission to use, copy, modify, and distribute this software
- * and its documentation for any purpose is hereby granted without
+ * Permission to use, copy, modify, and distribute this software 
+ * and its documentation for any purpose is hereby granted without 
  * fee, provided that the above copyright notice appears in all copies
- * and that both the copyright notice, this permission notice, and
- * the following disclaimer appear in supporting documentation, and
- * that the name of Stanford University, not be used in advertising or
+ * and that both the copyright notice, this permission notice, and 
+ * the following disclaimer appear in supporting documentation, and 
+ * that the name of Stanford University, not be used in advertising or 
  * publicity pertaining to distribution of the software without specific,
  * written prior permission.
- *
+ * 
  * STANFORD UNIVERSITY, DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
- * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
- * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
- * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER ACTION, ARISING OUT OF OR IN
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+ * FITNESS. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY 
+ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER 
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION 
+ * OF CONTRACT, NEGLIGENCE OR OTHER ACTION, ARISING OUT OF OR IN 
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
@@ -38,7 +38,6 @@
 #include "miscfns.h"
 
 /*static void printState();*/
-static int selectRequest();
 static int selectGrant();
 static int selectAccept();
 static void createScheduleState();
@@ -48,7 +47,7 @@ static OutputSchedulerState *createOutScheduler();
 /*  Determines switch configuration 					*/
 /*  Configuration is filled into aSwitch->fabric.Xbar_matrix array 	*/
 
-typedef struct {
+typedef struct {	
   struct Element *next;
   struct Element *prev;
   int *inputAcceptPointer;
@@ -56,9 +55,8 @@ typedef struct {
   int *connection;
 } State;
 
-void
-drr(action, aSwitch, argc, argv)
-  SwitchAction action;
+void drr(action, aSwitch, argc, argv)
+SwitchAction action;
 Switch *aSwitch;
 int argc;
 char **argv;
@@ -66,21 +64,21 @@ char **argv;
   SchedulerState 			*scheduleState;
   InputSchedulerState 	*inputSchedule;
   OutputSchedulerState	*outputSchedule;
-  int input, switchOutput, fabricOutput, numFabricOutputs,reqOutput;
+  int input, switchOutput, fabricOutput, numFabricOutputs;
   Cell *aCell;
   struct List *fifo;
 
   if(debug_algorithm)
     printf("Algorithm 'drr()' called by switch %d\n", aSwitch->switchNumber);
-
+	
   switch(action) {
   case SCHEDULING_USAGE:
     fprintf(stderr, "Options for \"drr\" scheduling algorithm:\n");
     fprintf(stderr, "    -n number_of_iterations. Default: 1\n");
     break;
-  case SCHEDULING_INIT:
+  case SCHEDULING_INIT:	
     if(debug_algorithm) printf("	SCHEDULING_INIT\n");
-
+			
     if( aSwitch->scheduler.schedulingState == NULL )
       {
 	extern int opterr;
@@ -130,27 +128,16 @@ char **argv;
       if(debug_algorithm) printf("	SCHEDULING_EXEC\n");
 
       scheduleState=(SchedulerState *)aSwitch->scheduler.schedulingState;
-      numFabricOutputs = aSwitch->numOutputs *
+      numFabricOutputs = aSwitch->numOutputs * 
 	aSwitch->fabric.Xbar_numOutputLines;
 
       /*************** INITIALIZE ***************/
       /* Set up inputs (grants and accepts) */
-	 
-	 //clearing request buffer from input scheduler for every time slot
-	 int i,j;
-	  for(i=0;i<numFabricOutputs;i++){
-		outputSchedule = scheduleState->outputSched[i];
-		for(j=0;j<aSwitch->numInputs;j++){
-			outputSchedule->request[j]=0;
-		}
-		printf("]\n");
-	  }
-	  
       for(input=0; input<aSwitch->numInputs; input++)
 	{
 	  inputSchedule = scheduleState->inputSched[input];
 	  inputSchedule->accept = NONE;
-
+		
 	  for(fabricOutput=0;fabricOutput<numFabricOutputs;fabricOutput++)
 	    inputSchedule->grant[fabricOutput] = 0;
 	}
@@ -166,7 +153,7 @@ char **argv;
 
       /* Check for newly arrived cells at head of input queues. */
       for(input=0; input<aSwitch->numInputs; input++)
-	for(switchOutput=0; switchOutput<aSwitch->numOutputs;
+	for(switchOutput=0; switchOutput<aSwitch->numOutputs; 
 	    switchOutput++)
 	  {
 	    fifo = aSwitch->inputBuffer[input]->fifo[switchOutput];
@@ -188,29 +175,6 @@ char **argv;
       for(iteration=0;iteration<scheduleState->numIterations;iteration++)
 	{
 	  numConnectionsThisIteration = 0;
-
-      for(input=0; input<aSwitch->numInputs; input++) {
-        /* accept output for each input  */
-        reqOutput = selectRequest(aSwitch, input);
-        if( reqOutput >= 0 ) {
-          inputSchedule = scheduleState->inputSched[input];
-          outputSchedule= scheduleState->outputSched[reqOutput];
-
-          inputSchedule->request = reqOutput;
-          outputSchedule->request[input] = 1;
-        }
-      }
-	  
-	  int i,j;
-	  for(i=0;i<numFabricOutputs;i++){
-		outputSchedule = scheduleState->outputSched[i];
-		printf("Request array of output %d : [\t",i);
-		for(j=0;j<aSwitch->numInputs;j++){
-			printf("%d\t",outputSchedule->request[j]);
-		}
-		printf("]\n");
-	  }
-
 	  for(fabricOutput=0;fabricOutput<numFabricOutputs;fabricOutput++)
 	    {
 
@@ -220,7 +184,7 @@ char **argv;
 	      input = selectGrant(aSwitch, fabricOutput);
 	      if(debug_algorithm)
 		printf("Selected input %d\n", input);
-	      if( input != NONE )
+	      if( input != NONE ) 
 		{
 		  inputSchedule = scheduleState->inputSched[input];
 		  outputSchedule=scheduleState->outputSched[fabricOutput];
@@ -228,8 +192,8 @@ char **argv;
 		  outputSchedule->grant = input;
 		}
 	    }
-
-
+	
+	
 	  for(input=0; input<aSwitch->numInputs; input++)
 	    {
 	      /* accept output for each input  */
@@ -240,7 +204,7 @@ char **argv;
 		outputSchedule=scheduleState->outputSched[fabricOutput];
 		inputSchedule->accept = fabricOutput;
 		outputSchedule->accept = input;
-
+						
 	      }
 	    }
 	  /* If no connections were made during this iteration, */
@@ -259,6 +223,7 @@ char **argv;
 	    aSwitch->fabric.Xbar_matrix[fabricOutput].cell = (Cell *)
 	      aSwitch->inputBuffer[input]->fifo[fabricOutput]->head->Object;
 	}
+
       break;
     }
 
@@ -273,7 +238,7 @@ char **argv;
   case SCHEDULING_REPORT_STATE:
     scheduleState=(SchedulerState *) aSwitch->scheduler.schedulingState;
 
-    numFabricOutputs = aSwitch->numOutputs *
+    numFabricOutputs = aSwitch->numOutputs * 
       aSwitch->fabric.Xbar_numOutputLines;
 
     printf("Output: ");
@@ -284,12 +249,12 @@ char **argv;
       printf("%2d ", input);
     printf("\n        ");
     for(fabricOutput=0; fabricOutput<numFabricOutputs; fabricOutput++)
-      printf("%2d ",
+      printf("%2d ", 
 	     ((scheduleState->outputSched[fabricOutput]->last_accepted_grant) + 1)%aSwitch->numInputs);
     printf("       ");
     for(input=0; input<aSwitch->numInputs; input++)
-      printf("%2d ",
-	     ((scheduleState->inputSched[input]->last_accept)
+      printf("%2d ", 
+	     ((scheduleState->inputSched[input]->last_accept) 
 	      + 1)%numFabricOutputs);
     printf("\n");
     break;
@@ -298,160 +263,100 @@ char **argv;
     break;
   }
 
+	
+
   if(debug_algorithm)
     printf("Algorithm 'drr()' completed for switch %d\n", aSwitch->switchNumber);
 }
 
 /***********************************************************************/
 static int
-selectRequest(aSwitch, input)
-Switch *aSwitch;
-int input;
-/* Function declartion above is pre ANSI-C style which is same as:
- * static int selectRequest(Switch *aSwitch, int input)
- *
- * Function takes two parameters:
- * Switch *aSwitch:     Pointer to Switch
- * int input:           input for which we are selecting request
- *
- */
-{
-  // The request selected by this function will be stored in this variable
-  int requested_output;
-
-  // Scheduler State of switch copied to local variable
-  SchedulerState *scheduleState = (SchedulerState *)aSwitch->scheduler.schedulingState;
-
-  // Input scheduler state for current input copied to local variable
-  InputSchedulerState *inputSchedule = scheduleState->inputSched[input];
-
-  // Create local copies of input buffer and cell
-  InputBuffer  *inputBuffer;
-  Cell *aCell;
-
-  int increment;
-  int request_pointer;
-
-  /**************************************/
-  // Iterate over all outputs
-  for(increment=1; increment<=aSwitch->numOutputs; increment++){
-
-      // increment request pointer circular
-      request_pointer = (inputSchedule->last_request + increment)%(aSwitch->numOutputs);
-
-      // requested_output is the output that request_pointer is pointing at
-      requested_output = inputSchedule->RR_requests[request_pointer];
-
-      // copy input buffer of current input to local variable
-      inputBuffer = aSwitch->inputBuffer[input];
-
-      /* if (
-       *    1: Current input's VOQ for requested_output has packets
-       *    AND
-       *    2: The reqested output has not already granted an input
-       * )
-       */
-      if(( inputBuffer->fifo[requested_output]->number > 0 )
-          && ( scheduleState->outputSched[requested_output]->grant == NONE )){
-
-          // move current request to last request
-          inputSchedule->last_request = requested_output;
-          if(debug_algorithm)
-              printf("Input %d requesting to output %d\n", input, requested_output);
-
-          // The request has been succesfully selected
-          return(requested_output);
-        }
-    }
-
-  if(debug_algorithm)
-    printf("Input %d requested no output. None granted.\n", input);
-
-  // No request selected
-  return(NONE);
-}
-
-
-
-
-/***********************************************************************/
-static int
 selectGrant(aSwitch, output)
-Switch *aSwitch;
+  Switch *aSwitch;
 int output;
-/* Function declartion above is pre ANSI-C style which is same as:
- * static int selectGrant(Switch *aSwitch, int output)
- *
- * Function takes two parameters:
- * Switch *aSwitch:     Pointer to Switch
- * int output:          output for which we are selecting grant
- *
- */
- {
-  // The grant selected by this function will be stored in this variable
-  int granted_input;
-
-  // Scheduler State of switch copied to local variable
-  SchedulerState *scheduleState = (SchedulerState *)aSwitch->scheduler.schedulingState;
-
-  // Output scheduler state for current input copied to local variable
+{
+  /*
+    Select next requesting input from schedule
+    */
+  int input;
+  SchedulerState	*scheduleState =
+    (SchedulerState *)aSwitch->scheduler.schedulingState;
   OutputSchedulerState *outputSchedule=scheduleState->outputSched[output];
-
-  // Create local copies of input buffer and cell
   InputBuffer  *inputBuffer;
   Cell *aCell;
 
   int increment;
-  int grant_pointer;
-
+  int sched_input;
+  int request_ptr;
+  int i;
   int switchOutput=output/aSwitch->fabric.Xbar_numOutputLines;
-
+	
   /* Check to see if output has already been accepted by an input from
        an earlier iteration */
-  if( outputSchedule->accept != NONE ){
+  if( outputSchedule->accept != NONE )
+    {
       if(debug_algorithm)
-        printf("Output %d already accepted by input %d\n", output, outputSchedule->accept);
+	printf("Output %d already accepted by input %d\n", output, outputSchedule->accept);
       return(NONE);
     }
 
   /**************************************/
 
-  // Iterate over all inputs
   for(increment=1; increment<=aSwitch->numInputs; increment++)
     {
-      // increment grant pointer circular
-      grant_pointer = (outputSchedule->last_accepted_grant + increment)%(aSwitch->numInputs);
-
-      // granted_input is the input that grant_pointer is pointing at
-      granted_input = outputSchedule->RR_grants[grant_pointer];
-
-      // copy input buffer of current input to local variable
-      inputBuffer = aSwitch->inputBuffer[granted_input];
-
-      /* if (
-       *    1: input pointed by grant_pointer has request for current output
-       *    AND
-       *    2: The granted_input has not already accepted a grant
-       * )
-       */
-      if(( outputSchedule->request[grant_pointer] == 1 )
-        && ( scheduleState->inputSched[granted_input]->accept == NONE )){
+	
+	
+      sched_input = (outputSchedule->last_accepted_grant + increment)%(aSwitch->numInputs);
+	  
+	  //This holds same value as the last_accepted_grant
+	  input = outputSchedule->RR_grants[sched_input];
+	  
+	  //Get VOQs for current input
+      inputBuffer = aSwitch->inputBuffer[input];	  
+	  
+	  //Iterate through all VOQs for current input to select request
+	  for(i = 1; i<=aSwitch->numOutputs; i++)
+	  {
+		
+		//Check request pointer of current input and increment it by 1 everytime  
+		request_ptr = (scheduleState->inputSched[input]->last_accept+ i)%(aSwitch->numOutputs);
+		
+		if(debug_algorithm)  
+			printf("\tRequest pointer of input %d at %d\n",input,request_ptr);
+		
+		if(request_ptr == switchOutput)
+		{
 			if(debug_algorithm)
-				printf("o/p Sched -> req[grant_ptr]: %d\n",outputSchedule->request[grant_pointer]);
+				printf("\t\tRequest pointer is same as switchOutput %d %d\n", request_ptr,switchOutput);
+			//Check VOQ of current ouput for current input is non empty and has not already accepted grant
+			if(( inputBuffer->fifo[switchOutput]->number > 0 ) 
+				&& ( scheduleState->inputSched[input]->accept == NONE ))
+			{
+			  /* STATS */
+			  /* Mark grantTime for cell at head of line */
+			  aCell = (Cell *) inputBuffer->fifo[switchOutput]->head->Object;
+			  scheduleCellStats( SCHEDULE_CELL_STATS_UPDATE_GRANT, 
+						 aSwitch, aCell);
+			  /* END STATS */
 
-        /* STATS */
-        /* Mark grantTime for cell at head of line */
-        /* aCell = (Cell *) inputBuffer->fifo[switchOutput]->head->Object;
-        scheduleCellStats( SCHEDULE_CELL_STATS_UPDATE_GRANT,
-        aSwitch, aCell); */
-        /* END STATS */
-
-        outputSchedule->last_accepted_grant = granted_input;
-        
-		if(debug_algorithm)
-          printf("Output %d granting to input %d\n", output, granted_input);
-        return(granted_input);
-        }
+			  outputSchedule->last_accepted_grant = input; 
+			  if(debug_algorithm)
+				printf("\t\tOutput %d granting to input %d\n", output, input);
+			  return(input);
+			}
+			else{
+				if(debug_algorithm)
+					printf("\t\tRequest of input %d at %d and VOQ length %d. Ignored.\n",input,request_ptr,inputBuffer->fifo[switchOutput]->number);
+				break;
+			}
+		}
+		else if(inputBuffer->fifo[request_ptr]->number > 0)
+		{
+			if(debug_algorithm)
+				printf("\t\tRequest pointer at %d VOQ not empty\n", request_ptr);
+			break;
+		}
+	  }
     }
 
   if(debug_algorithm)
@@ -476,7 +381,7 @@ int input;
   Cell *aCell;
   int output, switchOutput, numFabricOutputs;
 
-  int increment, sched_output;
+  int increment, sched_output, numGrants;
 
 
   numFabricOutputs = aSwitch->numOutputs*aSwitch->fabric.Xbar_numOutputLines;
@@ -485,16 +390,16 @@ int input;
     return( NONE );
 
 	/*	How many outputs granted to this input? */
-	/*
+	 
 	numGrants=0;
 	for(output=0; output<numFabricOutputs; output++)
-	{
+	{	
 		if( inputSchedule->grant[output] == 1 )
 			numGrants++;
 	}
 	if( numGrants > 1 )
 		printf("%d outputs granted to input %d\n", numGrants, input);
-	*/
+	
 
   for( increment=1; increment<=numFabricOutputs; increment++ )
     {
@@ -510,12 +415,12 @@ int input;
 	  switchOutput = output / aSwitch->fabric.Xbar_numOutputLines;
 	  aCell = (Cell *)
 	    aSwitch->inputBuffer[input]->fifo[switchOutput]->head->Object;
-	  scheduleCellStats( SCHEDULE_CELL_STATS_UPDATE_ACCEPT,
+	  scheduleCellStats( SCHEDULE_CELL_STATS_UPDATE_ACCEPT, 
 			     aSwitch, aCell);
 
 	  if(debug_algorithm)
 	    printf("Input %d accepting output %d\n", input, output);
-	  return(output);
+	  return(output);	
 	}
     }
 
@@ -538,51 +443,45 @@ createScheduleState(aSwitch)
   int input, output, numFabricOutputs;
 
   numFabricOutputs = aSwitch->numOutputs*aSwitch->fabric.Xbar_numOutputLines;
-
+	
   scheduleState = (SchedulerState *) malloc(sizeof(SchedulerState));
   aSwitch->scheduler.schedulingState = scheduleState;
 
-
-  scheduleState->inputSched = (InputSchedulerState **)
+	
+  scheduleState->inputSched = (InputSchedulerState **) 
     malloc( aSwitch->numInputs * sizeof(InputSchedulerState *) );
   for(input=0; input<aSwitch->numInputs; input++)
     scheduleState->inputSched[input] = createInScheduler(aSwitch, input);
 
-  scheduleState->outputSched = (OutputSchedulerState **)
+  scheduleState->outputSched = (OutputSchedulerState **) 
     malloc( numFabricOutputs * sizeof(OutputSchedulerState *) );
   for(output=0; output<numFabricOutputs; output++)
     scheduleState->outputSched[output]=createOutScheduler(aSwitch, output);
-
+	
 }
 
 static InputSchedulerState *
 createInScheduler(aSwitch, input)
   Switch *aSwitch;
 int input;
-{
+{	
   SchedulerState 		*scheduleState=aSwitch->scheduler.schedulingState;
   InputSchedulerState	**inputSchedule=scheduleState->inputSched;
   int i, numFabricOutputs;
 
   numFabricOutputs = aSwitch->numOutputs*aSwitch->fabric.Xbar_numOutputLines;
 
-  inputSchedule[input] = (InputSchedulerState *)
+  inputSchedule[input] = (InputSchedulerState *) 
     malloc( sizeof( InputSchedulerState ) );
   inputSchedule[input]->grant = (int *) malloc( sizeof(int)*numFabricOutputs);
-  inputSchedule[input]->RR_accepts =
+  inputSchedule[input]->RR_accepts = 
     (int *) malloc( sizeof(int)*numFabricOutputs);
   for(i=0; i<numFabricOutputs; i++ )
     inputSchedule[input]->RR_accepts[i] = i;
   inputSchedule[input]->last_accept=0;
 
-  inputSchedule[input]->RR_requests =
-    (int *) malloc( sizeof(int)*numFabricOutputs);
-  for(i=0; i<numFabricOutputs; i++ )
-    inputSchedule[input]->RR_requests[i] = i;
-  inputSchedule[input]->last_request=0;
-
   return(inputSchedule[input]);
-
+	
 }
 
 static OutputSchedulerState *
@@ -648,3 +547,5 @@ State *aState;
 
 }
 #endif
+
+

@@ -37,11 +37,6 @@ typedef struct {
 	int		*grant;		/* Array of outputs that have granted to this input */
 	int		accept;		/* Output that this input has accepted or NONE */
 	int		last_accept;/* Output that this input accepted last time */
-
-	//************************** Added for Dual Round Robin ****************************//
-	int		*RR_requests;/* Ordered schedule array of accepts */
-	int		request;		/* Output that this input has accepted or NONE */
-	int		last_request;/* Output that this input accepted last time */
 } InputSchedulerState;
 
 typedef struct {
@@ -60,3 +55,4 @@ typedef struct {
 										/* scheduler state. 1 per output.	*/
 	int numIterations;
 } SchedulerState;
+
